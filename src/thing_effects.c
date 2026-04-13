@@ -1617,6 +1617,18 @@ struct Thing *create_price_effect(const struct Coord3d *pos, long plyr_idx, long
     TRACE_THING(elemtng);
     if (!thing_is_invalid(elemtng)) {
         elemtng->price_effect.number = abs(price);
+        elemtng->price_effect.colour = 0;
+    }
+    return elemtng;
+}
+
+struct Thing *create_coloured_price_effect(const struct Coord3d *pos, long plyr_idx, long number, unsigned char colour)
+{
+    struct Thing* elemtng = create_effect_element(pos, TngEffElm_Price, plyr_idx);
+    TRACE_THING(elemtng);
+    if (!thing_is_invalid(elemtng)) {
+        elemtng->price_effect.number = abs(number);
+        elemtng->price_effect.colour = colour;
     }
     return elemtng;
 }

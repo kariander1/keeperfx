@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define FTESTLOG(format, ...) LbFTestLog("[%d] %s: " format "\n", get_gameturn(), __func__ , ##__VA_ARGS__)
+#define FTESTLOG(format, ...) LbFTestLog("[%" PRIu32 "] %s: " format "\n", get_gameturn(), __func__ , ##__VA_ARGS__)
 
 #define FTEST_FAIL_TEST(format, ...) { \
     set_flag(start_params.functest_flags, FTF_TestFailed); \

@@ -16,6 +16,8 @@
 #include "tests/ftest_bug_invisible_units_cant_select.h"
 #include "tests/ftest_bug_pathing_stair_treasury.h"
 #include "tests/ftest_bug_ai_bridge.h"
+#include "tests/ftest_bug_combat_melee_jumping.h"
+#include "tests/ftest_bug_pathing_pillar_circling_2.h"
 // append your test include here, eg: #include "tests/ftest_your_test_header.h"
 
 #include "../post_inc.h"
@@ -39,6 +41,8 @@ struct ftest_onlyappendtests__config ftest_onlyappendtests__conf = {
          { .test_name="bug_imp_goldseam_dig",               .init_func=ftest_bug_imp_goldseam_dig_init,             .level_file="keeporig", .level=1,  .frame_skip=8 },
          { .test_name="bug_pathing_stair_treasury",         .init_func=ftest_bug_pathing_stair_treasury_init,       .level_file="keeporig", .level=1,  .frame_skip=8 },
          { .test_name="bug_invisible_units_cant_select",    .init_func=ftest_bug_invisible_units_cant_select_init,  .level_file="keeporig", .level=1,  .frame_skip=0 },
+         { .test_name="bug_combat_melee_jumping",           .init_func=ftest_bug_combat_melee_jumping_init,         .level_file="keeporig", .level=1,  .frame_skip=0 },
+         { .test_name="bug_pathing_pillar_circling_2",      .init_func=ftest_bug_pathing_pillar_circling_2_init,    .level_file="keeporig", .level=1,  .frame_skip=0 },
 
          // WIP TEST { .test_name="bug_pathing_pillar_circling",        .init_func=ftest_bug_pathing_pillar_circling_init,      .level_file="keeporig", .level=1, .frame_skip=0 },
          // WIP TEST { .test_name="bug_invisible_units_cant_select",    .init_func=ftest_bug_invisible_units_cant_select_init,  .level_file="lostlvls", .level=103, .frame_skip=0 },
@@ -57,4 +61,3 @@ struct ftest_onlyappendtests__config ftest_onlyappendtests__conf = {
 #endif
 
 #endif
-

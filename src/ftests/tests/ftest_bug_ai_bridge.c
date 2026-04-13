@@ -87,17 +87,17 @@ FTestActionResult ftest_bug_ai_bridge_action001__setup_map(struct FTestActionArg
         struct Map* mapblk = get_map_block_at(stl_x, stl_y);
         if(map_block_invalid(mapblk))
         {
-            FTEST_FAIL_TEST("Invalid map block at subtile (%ld,%ld)", stl_x, stl_y)
+            FTEST_FAIL_TEST("Invalid map block at subtile (%ld,%ld)", (long)stl_x, (long)stl_y)
             return FTRs_Go_To_Next_Action;
         }
         struct Thing* thing = thing_get(get_mapwho_thing_index(mapblk));
         if (thing_is_invalid(thing) || !thing_is_creature(thing))
         {
-            FTEST_FAIL_TEST("Failed to find creature to nerf at subtile (%ld,%ld)", stl_x, stl_y);
+            FTEST_FAIL_TEST("Failed to find creature to nerf at subtile (%ld,%ld)", (long)stl_x, (long)stl_y);
             return FTRs_Go_To_Next_Action;
         }
         
-        FTESTLOG("Nerfing Creature %s at (%ld,%ld) to 'level 1' and '1 health'", creature_code_name(thing->model), stl_x, stl_y);
+        FTESTLOG("Nerfing Creature %s at (%ld,%ld) to 'level 1' and '1 health'", creature_code_name(thing->model), (long)stl_x, (long)stl_y);
         set_creature_level(thing, 0); // 0 == level 1
         thing->health = 1;
     }
@@ -183,7 +183,7 @@ FTestActionResult ftest_bug_ai_bridge_action002__end_test(struct FTestActionArgs
     {
         ++vars->test_runs;
         ++vars->test_runs_without_bridges;
-        FTESTLOG("Reached GameTurn limit %ld, exiting test.",  vars->end_test_after_n_turns);
+        FTESTLOG("Reached GameTurn limit %lu, exiting test.",  (unsigned long)vars->end_test_after_n_turns);
         ftest_bug_ai_bridge__report_stats_and_increment_seed();
         return FTRs_Go_To_Next_Action; // exit test
     }

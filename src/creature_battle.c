@@ -418,10 +418,25 @@ TbBool clear_battlers(unsigned short *friendly_battlers, unsigned short *enemy_b
     return true;
 }
 
+struct BattlerSortData {
+    unsigned short index;
+    long health_permil;
+};
+
+static int compare_battlers(const void *a, const void *b) {
+    const struct BattlerSortData *battlerA = (const struct BattlerSortData *)a;
+    const struct BattlerSortData *battlerB = (const struct BattlerSortData *)b;
+    if (battlerA->health_permil < battlerB->health_permil) return -1;
+    if (battlerA->health_permil > battlerB->health_permil) return 1;
+    return 0;
+}
+
 long setup_player_battlers(struct PlayerInfo *player, struct CreatureBattle *battle, unsigned short *friendly_battlers, unsigned short *enemy_battlers)
 {
-    short friendly_pos = 0;
-    short enemy_pos = 0;
+    struct BattlerSortData temp_friendly[CREATURES_COUNT];
+    struct BattlerSortData temp_enemy[CREATURES_COUNT];
+    short friendly_count = 0;
+    short enemy_count = 0;
     long i = battle->first_creatr;
     unsigned long k = 0;
     while (i > 0)
@@ -438,24 +453,25 @@ long setup_player_battlers(struct PlayerInfo *player, struct CreatureBattle *bat
         }
         struct CreatureControl* cctrl = creature_control_get_from_thing(thing);
         i = cctrl->battle_prev_creatr;
-        // Per creature code
-        long n;
+        
+        long max_hp = cctrl->max_health > 0 ? cctrl->max_health : 1;
+        long hp_permil = ((long long)thing->health * 1000) / max_hp;
+
         if (players_are_mutual_allies(player->id_number, thing->owner))
         {
-            n = friendly_pos;
-            if (n < MESSAGE_BATTLERS_COUNT) {
-                friendly_pos++;
-                friendly_battlers[n] = thing->index;
+            if (friendly_count < CREATURES_COUNT) {
+                temp_friendly[friendly_count].index = thing->index;
+                temp_friendly[friendly_count].health_permil = hp_permil;
+                friendly_count++;
             }
         } else
         {
-            n = enemy_pos;
-            if (n < MESSAGE_BATTLERS_COUNT) {
-                enemy_pos++;
-                enemy_battlers[n] = thing->index;
+            if (enemy_count < CREATURES_COUNT) {
+                temp_enemy[enemy_count].index = thing->index;
+                temp_enemy[enemy_count].health_permil = hp_permil;
+                enemy_count++;
             }
         }
-        // Per creature code ends
         k++;
         if (k > CREATURES_COUNT)
         {
@@ -463,7 +479,20 @@ long setup_player_battlers(struct PlayerInfo *player, struct CreatureBattle *bat
             break;
         }
     }
-    return friendly_pos+enemy_pos;
+
+    qsort(temp_friendly, friendly_count, sizeof(struct BattlerSortData), compare_battlers);
+    qsort(temp_enemy, enemy_count, sizeof(struct BattlerSortData), compare_battlers);
+
+    short friendly_pos = 0;
+    for (int j = 0; j < friendly_count && friendly_pos < MESSAGE_BATTLERS_COUNT; j++) {
+        friendly_battlers[friendly_pos++] = temp_friendly[j].index;
+    }
+    short enemy_pos = 0;
+    for (int j = 0; j < enemy_count && enemy_pos < MESSAGE_BATTLERS_COUNT; j++) {
+        enemy_battlers[enemy_pos++] = temp_enemy[j].index;
+    }
+
+    return friendly_pos + enemy_pos;
 }
 
 long setup_my_battlers(unsigned char battle_idx, unsigned short *friendly_battlers, unsigned short *enemy_battlers)

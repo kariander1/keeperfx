@@ -945,6 +945,29 @@ TbBool set_creature_health_to_max_with_heal_effect(struct Thing* thing)
     return true;
 }
 
+static void accumulate_damage_number(struct Thing *thing, struct CreatureControl *cctrl, HitPoints amount)
+{
+    struct Thing *popup = thing_get(cctrl->damage_popup_id);
+    if (thing_exists(popup) && popup->class_id == TCls_EffectElem && popup->model == TngEffElm_DamageNumber)
+    {
+        popup->price_effect.number += amount;
+        popup->health = 16;
+        popup->mappos.x.val = thing->mappos.x.val;
+        popup->mappos.y.val = thing->mappos.y.val;
+        popup->mappos.z.val = thing->mappos.z.val;
+    }
+    else
+    {
+        struct Thing *elemtng = create_effect_element(&thing->mappos, TngEffElm_DamageNumber, thing->owner);
+        if (!thing_is_invalid(elemtng))
+        {
+            elemtng->price_effect.number = amount;
+            elemtng->price_effect.colour = 0;
+            cctrl->damage_popup_id = elemtng->index;
+        }
+    }
+}
+
 TbBool apply_health_to_thing(struct Thing *thing, HitPoints amount)
 {
     struct CreatureControl* cctrl = creature_control_get_from_thing(thing);
@@ -954,6 +977,11 @@ TbBool apply_health_to_thing(struct Thing *thing, HitPoints amount)
         new_health += amount;
         if (new_health >= cctrl->max_health)
             new_health = cctrl->max_health;
+        HitPoints actual_heal = new_health - thing->health;
+        if (actual_heal > 0)
+        {
+            accumulate_damage_number(thing, cctrl, actual_heal);
+        }
         thing->health = new_health;
         return true;
     }
@@ -1111,6 +1139,18 @@ HitPoints apply_damage_to_thing(struct Thing *thing, HitPoints dmg, PlayerNumber
     default:
         cdamage = 0;
         break;
+    }
+    if (cdamage > 0)
+    {
+        if (thing->class_id == TCls_Creature)
+        {
+            struct CreatureControl* cctrl = creature_control_get_from_thing(thing);
+            accumulate_damage_number(thing, cctrl, cdamage);
+        }
+        else
+        {
+            create_price_effect(&thing->mappos, dealing_plyr_idx, cdamage);
+        }
     }
     return cdamage;
 }

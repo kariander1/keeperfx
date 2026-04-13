@@ -10,7 +10,7 @@
 #include "../slab_data.h"
 #include "../room_util.h"
 #include "../player_instances.h"
-#includw "../gui_msgs.h"
+#include "../gui_msgs.h"
 
 #include "../post_inc.h"
 
@@ -300,7 +300,7 @@ TbBool ftest_setup_test(struct FTestConfig* const test_config)
     TbBool result = change_campaign(start_params.selected_campaign);
     if(!result)
     {
-        FTEST_FAIL_TEST("Failed to load campaign '%d'", start_params.selected_campaign)
+        FTEST_FAIL_TEST("Failed to load campaign '%s'", start_params.selected_campaign)
         return false;
     }
     else
@@ -501,7 +501,7 @@ FTestFrameworkState ftest_update(FTestFrameworkState* const out_prev_state)
                 {
                     if(vars->current_action != vars->previous_action)
                     {
-                        FTESTLOG("executing action %d", vars->current_action);
+                    FTESTLOG("executing action %lu", vars->current_action);
                         vars->previous_action = vars->current_action;
                         current_test_action_args->actual_started_at_game_turn = game.play_gameturn;
                     }

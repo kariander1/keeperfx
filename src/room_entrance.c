@@ -34,6 +34,8 @@
 #include "config_creature.h"
 #include "config_terrain.h"
 #include "gui_soundmsgs.h"
+#include "gui_msgs.h"
+#include "creature_control.h"
 #include "game_legacy.h"
 #include "post_inc.h"
 #include <stdint.h>
@@ -77,6 +79,11 @@ struct Thing *create_creature_at_entrance(struct Room * room, ThingModel crkind)
     if (room->owner != game.neutral_player_num)
     {
         dungeon->lvstats.creatures_attracted++;
+        if (room->owner == my_player_number)
+        {
+            message_add_fmt_timeout(MsgType_Creature, crkind, GUI_CREATURE_MESSAGES_DELAY, "A %s was attracted through a portal", creature_code_name(crkind));
+            play_creature_sound(creatng, CrSnd_Happy, 2, 0);
+        }
     }
     struct Thing* heartng = get_player_soul_container(room->owner);
     TRACE_THING(heartng);

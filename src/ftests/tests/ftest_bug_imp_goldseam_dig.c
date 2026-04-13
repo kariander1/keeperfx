@@ -62,7 +62,7 @@ FTestActionResult ftest_bug_imp_goldseam_dig_action001__map_setup(struct FTestAc
     ftest_util_replace_slabs(36, 42, 38, 44, SlbT_TREASURE, PLAYER0);
 
     // store/broadcast the gold stored in a single tile
-    vars->game_gold_amount = game.conf.rules.game.gold_per_gold_block;
+    vars->game_gold_amount = game.conf.rules[PLAYER0].game.pot_of_gold_holds;
     message_add_fmt(MsgType_Player, PLAYER0, "Game gold per gold block: %ld", vars->game_gold_amount);
 
     return FTRs_Go_To_Next_Action;
@@ -85,8 +85,8 @@ FTestActionResult ftest_bug_imp_goldseam_dig_action002__send_imp_to_dig(struct F
     }
 
     // store/report the blocks health to user
-    struct SlabAttr *slbattr = get_slab_attrs(slabMapBlock);
-    HitPoints goldBlockHealth = game.block_health[slbattr->block_health_index];
+    struct SlabConfigStats *slabst = get_slab_stats(slabMapBlock);
+    HitPoints goldBlockHealth = game.block_health[slabst->block_health_index];
     message_add_fmt(MsgType_Player, PLAYER0, "Gold block at (%d,%d) has %d health", slb_x_gold_block, slb_y_gold_block, goldBlockHealth);
 
     // mark the block for digging
@@ -117,7 +117,7 @@ FTestActionResult ftest_bug_imp_goldseam_dig_action003__end_test(struct FTestAct
     message_add_fmt(MsgType_Player, PLAYER0, "Imp returned %d gold", dungeon->total_money_owned);
     if(dungeon->total_money_owned != vars->game_gold_amount)
     {
-        FTEST_FAIL_TEST("Goldseams have %ld gold, but imp returned %d gold!", vars->game_gold_amount, dungeon->total_money_owned);
+        FTEST_FAIL_TEST("Goldseams have %ld gold, but imp returned %ld gold!", (long)vars->game_gold_amount, (long)dungeon->total_money_owned);
         return FTRs_Go_To_Next_Action;
     }
 

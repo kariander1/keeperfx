@@ -251,6 +251,11 @@ void delete_message(unsigned char msg_idx)
 
 void message_add(char type, PlayerNumber plyr_idx, const char *text)
 {
+    message_add_timeout(type, plyr_idx, text, GUI_MESSAGES_DELAY);
+}
+
+void message_add_timeout(char type, PlayerNumber plyr_idx, const char *text, uint32_t timeout)
+{
     SYNCDBG(2,"Player %d: %s",(int)plyr_idx,text);
     for (int i = GUI_MESSAGES_COUNT - 1; i > 0; i--)
     {
@@ -258,7 +263,7 @@ void message_add(char type, PlayerNumber plyr_idx, const char *text)
     }
     snprintf(game.messages[0].text, sizeof(game.messages[0].text), "%s", text);
     game.messages[0].plyr_idx = plyr_idx;
-    game.messages[0].expiration_turn = game.play_gameturn + GUI_MESSAGES_DELAY;
+    game.messages[0].expiration_turn = game.play_gameturn + timeout;
     game.messages[0].target_idx = -1;
     game.messages[0].type = type;
     if (game.active_messages_count < GUI_MESSAGES_COUNT) {
@@ -273,6 +278,16 @@ void message_add_fmt(char type, PlayerNumber plyr_idx, const char *fmt_str, ...)
     va_start(val, fmt_str);
     vsnprintf(full_msg_text, sizeof(full_msg_text), fmt_str, val);
     message_add(type, plyr_idx, full_msg_text);
+    va_end(val);
+}
+
+void message_add_fmt_timeout(char type, PlayerNumber plyr_idx, uint32_t timeout, const char *fmt_str, ...)
+{
+    static char full_msg_text[2048];
+    va_list val;
+    va_start(val, fmt_str);
+    vsnprintf(full_msg_text, sizeof(full_msg_text), fmt_str, val);
+    message_add_timeout(type, plyr_idx, full_msg_text, timeout);
     va_end(val);
 }
 

@@ -222,6 +222,7 @@ struct Thing {
       } shot_effect;
       struct {
         int32_t number;
+        unsigned char colour; // 0 = default gold, nonzero = flat colour for digits
       } price_effect;
 //TCls_EffectGen
       struct {

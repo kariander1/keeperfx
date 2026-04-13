@@ -846,7 +846,11 @@ void update_thing_animation(struct Thing *thing)
     {
       cctrl = creature_control_get_from_thing(thing);
       if (!creature_control_invalid(cctrl))
-        cctrl->anim_time = thing->anim_time;
+              {
+                cctrl->anim_time = thing->anim_time;
+                if (thing->owner == my_player_number)
+                    cctrl->force_health_flower_displayed = true;
+              }
     }
     if ((thing->anim_speed != 0) && (thing->max_frames != 0))
     {
