@@ -222,7 +222,8 @@ struct Thing {
       } shot_effect;
       struct {
         int32_t number;
-        unsigned char colour; // 0 = default gold, nonzero = flat colour for digits
+        unsigned char colour; // 0 = default gold, nonzero = tint colour index for ghost table remap
+        float scale;          // extra scale multiplier (0 = normal, <1.0 = smaller)
       } price_effect;
 //TCls_EffectGen
       struct {

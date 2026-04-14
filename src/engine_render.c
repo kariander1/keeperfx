@@ -303,7 +303,8 @@ struct BucketKindFloatingGoldText { // BasicQ type 16
     long x;
     long y;
     long lvl;
-    TbPixel colour; // 0 = use default gold sprites, nonzero = draw all digits in this flat colour
+    TbPixel colour; // 0 = use default gold sprites, nonzero = tint colour for ghost table remap
+    float scale;    // extra scale multiplier (0 or 1.0 = normal, <1.0 = smaller)
 };
 
 struct BucketKindRoomFlag { // BasicQ type 17,19
@@ -5053,8 +5054,9 @@ static void draw_engine_number(struct BucketKindFloatingGoldText *num)
     player = get_my_player();
     lbDisplay.DrawFlags &= ~Lb_SPRITE_FLIP_HORIZ;
     spr = get_button_sprite(GBS_fontchars_number_dig0);
-    w = scale_ui_value(spr->SWidth) * scale_by_zoom;
-    h = scale_ui_value(spr->SHeight) * scale_by_zoom;
+    float extra_scale = (num->scale > 0.0f) ? num->scale : 1.0f;
+    w = scale_ui_value(spr->SWidth) * scale_by_zoom * extra_scale;
+    h = scale_ui_value(spr->SHeight) * scale_by_zoom * extra_scale;
     struct Camera *active_cam = get_player_active_camera(player);
     if (
         active_cam != NULL &&
@@ -5075,7 +5077,7 @@ static void draw_engine_number(struct BucketKindFloatingGoldText *num)
                 spr = get_button_sprite((remaining_digits%10) + GBS_fontchars_number_dig0);
                 if (num->colour != 0)
                 {
-                    LbSpriteDrawScaledOneColour(pos_x, num->y - h, spr, w, h, num->colour);
+                    LbSpriteDrawScaledRemap(pos_x, num->y - h, spr, w, h, &pixmap.ghost[num->colour * 256]);
                 }
                 else
                 {
@@ -7249,7 +7251,7 @@ static void add_lgttextrdquad_to_polypool(long x, long y, long texture_idx, long
     poly->marked_mode = 3;
 }
 
-static void add_number_to_polypool(long x, long y, long number, long bckt_idx, TbPixel colour)
+static void add_number_to_polypool(long x, long y, long number, long bckt_idx, TbPixel colour, float scale)
 {
     struct BucketKindFloatingGoldText *poly;
     if (bckt_idx >= BUCKETS_COUNT) {
@@ -7269,6 +7271,7 @@ static void add_number_to_polypool(long x, long y, long number, long bckt_idx, T
     }
     poly->lvl = number;
     poly->colour = colour;
+    poly->scale = scale;
 }
 
 static void add_room_flag_pole_to_polypool(long x, long y, long room_idx, long bckt_idx)
@@ -8764,7 +8767,7 @@ static void do_map_who_for_thing(struct Thing *thing)
         rotpers(&ecor, &camera_matrix);
         if (getpoly < poly_pool_end)
         {
-            add_number_to_polypool(ecor.view_width, ecor.view_height, thing->price_effect.number, 1, thing->price_effect.colour);
+            add_number_to_polypool(ecor.view_width, ecor.view_height, thing->price_effect.number, 1, thing->price_effect.colour, thing->price_effect.scale);
         }
         break;
     case ODC_RoomStatusFlag:
@@ -8882,7 +8885,7 @@ static void draw_frontview_thing_on_element(struct Thing *thing, struct Map *map
         convert_world_coord_to_front_view_screen_coord(&thing->interp_mappos,cam,&cx,&cy,&cz);
         if (is_free_space_in_poly_pool(1))
         {
-            add_number_to_polypool(cx, cy, thing->creature.gold_carried, 1, thing->price_effect.colour);
+            add_number_to_polypool(cx, cy, thing->creature.gold_carried, 1, thing->price_effect.colour, thing->price_effect.scale);
         }
         break;
     case ODC_RoomStatusFlag: // Room Status flags

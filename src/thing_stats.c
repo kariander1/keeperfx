@@ -945,16 +945,40 @@ TbBool set_creature_health_to_max_with_heal_effect(struct Thing* thing)
     return true;
 }
 
-static void accumulate_damage_number(struct Thing *thing, struct CreatureControl *cctrl, HitPoints amount)
+static float calculate_popup_scale(HitPoints number, HitPoints max_health)
 {
-    struct Thing *popup = thing_get(cctrl->damage_popup_id);
+    if (max_health <= 0)
+        return 1.0f;
+    float ratio = (float)number / (float)max_health;
+    if (ratio > 1.0f)
+        ratio = 1.0f;
+    return 0.4f + 0.6f * ratio;
+}
+
+static void accumulate_popup_number(struct Thing *thing, ThingIndex *popup_id, HitPoints amount, unsigned char colour)
+{
+    struct CreatureControl *cctrl = creature_control_get_from_thing(thing);
+    HitPoints max_health = cctrl->max_health;
+    struct Thing *popup = thing_get(*popup_id);
     if (thing_exists(popup) && popup->class_id == TCls_EffectElem && popup->model == TngEffElm_DamageNumber)
     {
         popup->price_effect.number += amount;
+        popup->price_effect.scale = calculate_popup_scale(popup->price_effect.number, max_health);
         popup->health = 16;
-        popup->mappos.x.val = thing->mappos.x.val;
-        popup->mappos.y.val = thing->mappos.y.val;
-        popup->mappos.z.val = thing->mappos.z.val;
+        HitPoints total = popup->price_effect.number + amount;
+        delete_thing_structure(popup, 0);                                                    
+        struct Thing *elemtng = create_effect_element(&thing->mappos, TngEffElm_DamageNumber, thing->owner);                                                                              
+        if (!thing_is_invalid(elemtng))                                                      
+        {                                                                                    
+            elemtng->price_effect.number = total;                                            
+            elemtng->price_effect.colour = colour;                                           
+            elemtng->price_effect.scale = calculate_popup_scale(total, max_health);          
+            *popup_id = elemtng->index;                                                      
+        }                                                                                    
+        else                                                                                 
+        {                                                                                    
+            *popup_id = 0;                                                                   
+        }                                                                                    
     }
     else
     {
@@ -962,8 +986,9 @@ static void accumulate_damage_number(struct Thing *thing, struct CreatureControl
         if (!thing_is_invalid(elemtng))
         {
             elemtng->price_effect.number = amount;
-            elemtng->price_effect.colour = 0;
-            cctrl->damage_popup_id = elemtng->index;
+            elemtng->price_effect.colour = colour;
+            elemtng->price_effect.scale = calculate_popup_scale(amount, max_health);
+            *popup_id = elemtng->index;
         }
     }
 }
@@ -980,7 +1005,7 @@ TbBool apply_health_to_thing(struct Thing *thing, HitPoints amount)
         HitPoints actual_heal = new_health - thing->health;
         if (actual_heal > 0)
         {
-            accumulate_damage_number(thing, cctrl, actual_heal);
+            accumulate_popup_number(thing, &cctrl->heal_popup_id, actual_heal, colours[10][15][10]);
         }
         thing->health = new_health;
         return true;
@@ -1140,17 +1165,15 @@ HitPoints apply_damage_to_thing(struct Thing *thing, HitPoints dmg, PlayerNumber
         cdamage = 0;
         break;
     }
-    if (cdamage > 0)
+    if (cdamage > 0 && thing->class_id == TCls_Creature)
     {
-        if (thing->class_id == TCls_Creature)
-        {
-            struct CreatureControl* cctrl = creature_control_get_from_thing(thing);
-            accumulate_damage_number(thing, cctrl, cdamage);
-        }
+        struct CreatureControl* cctrl = creature_control_get_from_thing(thing);
+        unsigned char dmg_colour;
+        if (thing->owner == my_player_number)
+            dmg_colour = colours[15][2][2];   // reddish for friendly creatures
         else
-        {
-            create_price_effect(&thing->mappos, dealing_plyr_idx, cdamage);
-        }
+            dmg_colour = colours[15][12][4];   // orangish for enemy creatures
+        accumulate_popup_number(thing, &cctrl->damage_popup_id, cdamage, dmg_colour);
     }
     return cdamage;
 }

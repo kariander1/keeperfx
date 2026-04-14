@@ -405,6 +405,7 @@ struct CreatureControl {
     uint32_t timebomb_countdown;
     ThingIndex timebomb_countdown_id;
     ThingIndex damage_popup_id;
+    ThingIndex heal_popup_id;
     ThingIndex timebomb_target_id;
     GameTurn unsummon_turn;
     ThingIndex summoner_idx;
