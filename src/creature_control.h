@@ -186,6 +186,7 @@ struct CreatureControl {
     unsigned short prev_in_group;
     ThingIndex group_leader_idx;
     uint16_t group_member_count;
+    unsigned char custom_group; /**< Player-assigned group number (0=none, 1-9=group) */
     short last_work_room_id;
     /** Work room index, used when creature is working in a room. */
     short work_room_id;

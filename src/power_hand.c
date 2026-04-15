@@ -57,6 +57,8 @@
 #include "gui_draw.h"
 #include "engine_render.h"
 #include "engine_arrays.h"
+#include "custom_sprites.h"
+#include "config_spritecolors.h"
 #include "sounds.h"
 #include "game_legacy.h"
 #include "sprites.h"
@@ -1191,7 +1193,21 @@ void draw_mini_things_in_hand(long x, long y)
                 if (MyScreenHeight < 400)
                 {
                     char expshift_y = (irow > 0) ? 32 : -6;
+                    // Draw health flower
+                    unsigned short health_spridx_sm = choose_health_sprite(thing);
+                    if (health_spridx_sm > 0)
+                    {
+                        const struct TbSprite *hspr = get_button_sprite_for_player(health_spridx_sm, thing->owner);
+                        LbSpriteDrawResized(scrpos_x, scrpos_y + scale_ui_value(expshift_y), ps_units_per_px, hspr);
+                    }
+                    // Draw level on top of flower
                     draw_button_sprite_left(scrpos_x, scrpos_y + scale_ui_value(expshift_y), ps_units_per_px, expspr_idx);
+                    // Draw custom group number in color, top-right of flower
+                    if (cctrl->custom_group > 0 && cctrl->custom_group <= 9)
+                    {
+                        const struct TbSprite *grpspr = get_button_sprite(GBS_creature_flower_level_01 + cctrl->custom_group - 1);
+                        LbSpriteDrawResizedOneColour(scrpos_x + expshift_x, scrpos_y + scale_ui_value(expshift_y) - scale_ui_value(6), ps_units_per_px, grpspr, 14);
+                    }
                     if (thing->owner != my_player_number)
                     {
                         ownshift_y = (irow == 0) ? 1 : 56;
@@ -1236,8 +1252,23 @@ void draw_mini_things_in_hand(long x, long y)
                             }
                         }
                     }
-                    // Draw exp level
+                    // Draw health flower
+                    unsigned short health_spridx = choose_health_sprite(thing);
+                    if (health_spridx > 0)
+                    {
+                        const struct TbSprite *hspr = get_button_sprite_for_player(health_spridx, thing->owner);
+                        LbSpriteDrawResized(scrpos_x + expshift_x, scrpos_y + scale_ui_value(shift_y), ps_units_per_px, hspr);
+                    }
+                    // Draw exp level on top of flower
                     draw_button_sprite_left(scrpos_x + expshift_x, scrpos_y + scale_ui_value(shift_y), ps_units_per_px, expspr_idx);
+                    // Draw custom group number in color, top-right of the flower
+                    if (cctrl->custom_group > 0 && cctrl->custom_group <= 9)
+                    {
+                        const struct TbSprite *grpspr = get_button_sprite(GBS_creature_flower_level_01 + cctrl->custom_group - 1);
+                        int grp_x = scrpos_x + expshift_x + scale_ui_value(8);
+                        int grp_y = scrpos_y + scale_ui_value(shift_y) - scale_ui_value(6);
+                        LbSpriteDrawResizedOneColour(grp_x, grp_y, ps_units_per_px, grpspr, 14);
+                    }
                 }
             }
         } else

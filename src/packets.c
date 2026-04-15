@@ -1148,6 +1148,28 @@ TbBool process_players_global_packet_action(PlayerNumber plyr_idx)
         process_sprite_zip_count_sync(plyr_idx, pckt->actn_par1);
         return true;
     }
+    case PckA_CreatureGroupAssign:
+    {
+        int group_idx = pckt->actn_par1;
+        dungeon = get_dungeon(plyr_idx);
+        if (!dungeon_invalid(dungeon))
+        {
+            for (i = 0; i < dungeon->num_things_in_hand; i++)
+            {
+                thing = thing_get(dungeon->things_in_hand[i]);
+                if (thing_is_creature(thing) && (thing->owner == plyr_idx))
+                {
+                    assign_creature_to_custom_group(thing, (unsigned char)(group_idx + 1));
+                }
+            }
+        }
+        return 0;
+    }
+    case PckA_CreatureGroupRecall:
+    {
+        pickup_custom_creature_group(plyr_idx, pckt->actn_par1);
+        return 0;
+    }
     default:
       return process_players_global_cheats_packet_action(plyr_idx, pckt);
   }

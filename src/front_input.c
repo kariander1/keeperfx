@@ -70,6 +70,8 @@
 #include "map_blocks.h"
 #include "local_camera.h"
 #include "packets.h"
+#include "creature_groups.h"
+#include "dungeon_data.h"
 #include "console_cmd.h"
 
 #include "keeperfx.hpp"
@@ -1100,6 +1102,35 @@ short get_status_panel_keyboard_action_inputs(void)
     fake_button_click(BID_CREATR_TAB);
   }
   return false;
+}
+
+static void get_creature_group_inputs(void)
+{
+    struct PlayerInfo *player = get_my_player();
+    for (int i = 0; i < CUSTOM_GROUPS_COUNT; i++)
+    {
+        int kcode = KC_1 + i;
+        // Ctrl+Shift+num: assign creature in hand to group
+        if (is_key_pressed(kcode, KMod_CONTROL | KMod_SHIFT))
+        {
+            clear_key_pressed(kcode);
+            struct Dungeon *dungeon = get_players_num_dungeon(my_player_number);
+            if (!dungeon_invalid(dungeon) && dungeon->num_things_in_hand > 0)
+            {
+                set_players_packet_action(player, PckA_CreatureGroupAssign,
+                    i, 0, 0, 0);
+                show_onscreen_msg(game_num_fps, "Assigned to group %d", i + 1);
+            }
+            return;
+        }
+        // Bare num: pick up all creatures in group
+        if (is_key_pressed(kcode, KMod_NONE))
+        {
+            clear_key_pressed(kcode);
+            set_players_packet_action(player, PckA_CreatureGroupRecall, i, 0, 0, 0);
+            return;
+        }
+    }
 }
 
 TbBool get_dungeon_control_pausable_action_inputs(void)
@@ -2855,6 +2886,7 @@ short get_inputs(void)
     switch (player->view_type)
     {
     case PVT_DungeonTop:
+        get_creature_group_inputs();
         get_dungeon_control_pausable_action_inputs();
         if (!inp_handled)
             inp_handled = get_dungeon_control_action_inputs();

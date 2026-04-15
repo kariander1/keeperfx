@@ -5141,7 +5141,7 @@ static void draw_engine_room_flagpole(struct BucketKindRoomFlag *rflg)
  * Selects index of a sprite used to show creature health flower.
  * @param thing
  */
-static unsigned short choose_health_sprite(struct Thing* thing)
+unsigned short choose_health_sprite(struct Thing* thing)
 {
     struct CreatureControl *cctrl;
     cctrl = creature_control_get_from_thing(thing);
@@ -5428,6 +5428,14 @@ void draw_status_sprites(long scrpos_x, long scrpos_y, struct Thing *thing)
             w = (base_size * spr->SWidth * bs_units_per_px / 16) >> 13;
             h = (base_size * spr->SHeight * bs_units_per_px / 16) >> 13;
             LbSpriteDrawScaled(scrpos_x - w / 2, scrpos_y - h - h_add, spr, w, h);
+            // Draw custom group number top-right of the flower
+            if (cctrl->custom_group > 0 && cctrl->custom_group <= 9)
+            {
+                spr = get_button_sprite(GBS_creature_flower_level_01 + cctrl->custom_group - 1);
+                int gw = (base_size * spr->SWidth * bs_units_per_px / 16) >> 13;
+                int gh = (base_size * spr->SHeight * bs_units_per_px / 16) >> 13;
+                LbSpriteDrawScaledOneColour(scrpos_x + w / 4, scrpos_y - h - h_add - gh / 2, spr, gw, gh, 14);
+            }
         }
     }
     lbDisplay.DrawFlags = flg_mem;

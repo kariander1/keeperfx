@@ -145,6 +145,7 @@ void setup_rotate_stuff(long a1, long a2, long a3, long a4, long a5, long a6, lo
 
 void process_keeper_sprite(short x, short y, unsigned short a3, short kspr_angle, unsigned char a5, long a6);
 void draw_status_sprites(long a1, long a2, struct Thing *thing);
+unsigned short choose_health_sprite(struct Thing* thing);
 void draw_map_volume_box(long cor1_x, long cor1_y, long cor2_x, long cor2_y, long floor_height_z, unsigned char color);
 
 void update_engine_settings(struct PlayerInfo *player);

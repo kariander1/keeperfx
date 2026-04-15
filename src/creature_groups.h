@@ -30,6 +30,8 @@ extern "C" {
 #define GROUP_MEMBERS_COUNT 30
 #define FAMILIAR_MAX 8
 
+#define CUSTOM_GROUPS_COUNT 9
+
 enum TriggerFlags {
     TrgF_CREATE_PARTY                  =  0x00,
     TrgF_CREATE_CREATURE               =  0x01,
@@ -111,6 +113,9 @@ void leader_find_positions_for_followers(struct Thing *leadtng);
 
 struct Thing *script_process_new_party(struct Party *party, PlayerNumber plyr_idx, TbMapLocation location, long copies_num);
 struct Thing *script_process_new_tunneller_party(PlayerNumber plyr_idx, long prty_id, TbMapLocation location, TbMapLocation heading, CrtrExpLevel exp_level, unsigned long carried_gold);
+
+void assign_creature_to_custom_group(struct Thing *creatng, unsigned char group_num);
+void pickup_custom_creature_group(PlayerNumber plyr_idx, int group_idx);
 /******************************************************************************/
 #ifdef __cplusplus
 }

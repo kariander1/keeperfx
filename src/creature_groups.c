@@ -30,6 +30,10 @@
 #include "creature_control.h"
 #include "creature_states.h"
 #include "creature_states_hero.h"
+#include "dungeon_data.h"
+#include "magic_powers.h"
+#include "power_hand.h"
+#include "player_data.h"
 #include "config_creature.h"
 #include "room_jobs.h"
 #include "ariadne_wallhug.h"
@@ -936,6 +940,62 @@ struct Thing* script_process_new_tunneller_party(PlayerNumber plyr_idx, long prt
     add_creature_to_group_as_leader(ldthing, gpthing);
 
     return ldthing;
+}
+
+void assign_creature_to_custom_group(struct Thing *creatng, unsigned char group_num)
+{
+    if (!thing_is_creature(creatng))
+        return;
+    struct CreatureControl *cctrl = creature_control_get_from_thing(creatng);
+    if (creature_control_invalid(cctrl))
+        return;
+    cctrl->custom_group = group_num;
+    SYNCDBG(5, "Assigned %s index %d to custom group %d",
+        thing_model_name(creatng), (int)creatng->index, (int)group_num);
+}
+
+void pickup_custom_creature_group(PlayerNumber plyr_idx, int group_idx)
+{
+    unsigned char group_num = (unsigned char)(group_idx + 1);
+    struct Dungeon *dungeon = get_dungeon(plyr_idx);
+    if (dungeon_invalid(dungeon))
+        return;
+    struct PlayerInfo *player = get_player(plyr_idx);
+    int count = 0;
+    // Iterate both creature lists: non-diggers and diggers
+    for (int list = 0; list < 2; list++)
+    {
+        long i = (list == 0) ? dungeon->creatr_list_start : dungeon->digger_list_start;
+        unsigned long k = 0;
+        while (i != 0)
+        {
+            struct Thing *thing = thing_get(i);
+            TRACE_THING(thing);
+            struct CreatureControl *cctrl = creature_control_get_from_thing(thing);
+            if (thing_is_invalid(thing) || creature_control_invalid(cctrl))
+            {
+                ERRORLOG("Jump to invalid creature detected");
+                break;
+            }
+            i = cctrl->players_next_creature_idx;
+            if (cctrl->custom_group == group_num)
+            {
+                if (power_hand_is_full(player))
+                    break;
+                magic_use_available_power_on_thing(plyr_idx, PwrK_HAND, 0,
+                    thing->mappos.x.stl.num, thing->mappos.y.stl.num, thing, PwMod_Default);
+                count++;
+            }
+            k++;
+            if (k > CREATURES_COUNT)
+            {
+                ERRORLOG("Infinite loop detected when sweeping creatures list");
+                break;
+            }
+        }
+    }
+    SYNCDBG(5, "Picked up %d creatures from custom group %d for player %d",
+        count, (int)group_num, (int)plyr_idx);
 }
 
 /******************************************************************************/
