@@ -31,9 +31,13 @@
 #include "gui_frontmenu.h"
 #include "frontend.h"
 #include "front_input.h"
+#include "frontmenu_ingame_tabs.h"
 #include "sprites.h"
 #include "game_legacy.h"
 #include "custom_sprites.h"
+#include "room_entrance.h"
+#include "dungeon_data.h"
+#include "config_creature.h"
 #include "post_inc.h"
 
 #ifdef __cplusplus
@@ -619,6 +623,31 @@ void gui_area_creatrmodel_button(struct GuiButton *gbtn)
     } else
     {
         draw_gui_panel_sprite_left(gbtn->scr_pos_x, gbtn->scr_pos_y, ps_units_per_px, spr_idx);
+    }
+    // Draw portal pool count on the anger row below the icon (skip digger row)
+    int i = gbtn->btype_value & LbBFeF_IntValueMask;
+    if (i > 0)
+    {
+        ThingModel crmodel = breed_activities[(top_of_breed_list + i) % game.conf.crtr_conf.model_count];
+        struct Dungeon* dungeon = get_players_num_dungeon(my_player_number);
+        if (!dungeon_invalid(dungeon) && creature_will_generate_for_dungeon(dungeon, crmodel) && game.pool.crtr_kind[crmodel] > 0)
+        {
+            char pool_text[8];
+            snprintf(pool_text, sizeof(pool_text), "+%d", game.pool.crtr_kind[crmodel]);
+            LbTextSetFont(winfont);
+            unsigned long flgmem = lbDisplay.DrawFlags;
+            lbDisplay.DrawFlags = 0;
+            int tx_units = (gbtn->width * 16 + 22 / 2) / 22;
+            int half_units = tx_units / 2;
+            int text_w = LbTextStringWidthM(pool_text, half_units);
+            int text_h = LbTextLineHeight() * half_units / 16;
+            int area_w = gbtn->width;
+            int area_h = gbtn->height;
+            LbTextSetJustifyWindow(gbtn->scr_pos_x, gbtn->pos_y, area_w);
+            LbTextSetClipWindow(gbtn->scr_pos_x, gbtn->pos_y, area_w, area_h);
+            LbTextDrawResized(area_w - text_w, area_h - text_h, half_units, pool_text);
+            lbDisplay.DrawFlags = flgmem;
+        }
     }
     SYNCDBG(12,"Finished");
 }

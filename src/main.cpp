@@ -1297,7 +1297,7 @@ void update_creatr_model_activities_list(TbBool forced)
     int num_breeds = no_of_breeds_owned;
     TbBool changed = false;
 
-    // Add to breed activities
+    // Add to breed activities (owned creatures)
     for (crmodel = 1; crmodel < game.conf.crtr_conf.model_count; crmodel++)
     {
         if ((dungeon->owned_creatures_of_model[crmodel] > 0)
@@ -1321,10 +1321,36 @@ void update_creatr_model_activities_list(TbBool forced)
         }
     }
 
-    // Remove from breed activities
+    // Add attractable creatures (not yet owned, but available in pool)
     for (crmodel = 1; crmodel < game.conf.crtr_conf.model_count; crmodel++)
     {
         if ((dungeon->owned_creatures_of_model[crmodel] <= 0)
+            && creature_will_generate_for_dungeon(dungeon, crmodel)
+            && (crmodel != get_players_spectator_model(my_player_number)))
+        {
+            TbBool found = false;
+            for (int i = 0; i < num_breeds; i++)
+            {
+                if (breed_activities[i] == crmodel)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                changed = true;
+                breed_activities[num_breeds] = crmodel;
+                num_breeds++;
+            }
+        }
+    }
+
+    // Remove from breed activities (only if not owned AND not attractable)
+    for (crmodel = 1; crmodel < game.conf.crtr_conf.model_count; crmodel++)
+    {
+        if ((dungeon->owned_creatures_of_model[crmodel] <= 0)
+          && !creature_will_generate_for_dungeon(dungeon, crmodel)
           && (crmodel != get_players_special_digger_model(my_player_number)))
         {
             for (int i = 0; i < num_breeds; i++)
