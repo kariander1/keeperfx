@@ -69,6 +69,7 @@ enum DungeonCreatureTendencies {
     CrTend_None       = 0,
     CrTend_Imprison   = 1,
     CrTend_Flee       = 2,
+    CrTend_Graveyard  = 4,
 };
 
 enum DungeonResearchCategory {

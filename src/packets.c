@@ -822,6 +822,7 @@ TbBool process_players_global_packet_action(PlayerNumber plyr_idx)
           dungeon = get_players_dungeon(player);
           game.creatures_tend_imprison = ((dungeon->creature_tendencies & CrTend_Imprison) != 0);
           game.creatures_tend_flee = ((dungeon->creature_tendencies & CrTend_Flee) != 0);
+          game.creatures_tend_graveyard = ((dungeon->creature_tendencies & CrTend_Graveyard) != 0);
       }
       return 0;
   case PckA_CheatUnusedPlaceholder065:

@@ -2295,6 +2295,19 @@ void maintain_prison_bar(struct GuiButton *gbtn)
     }
 }
 
+void maintain_graveyard_bar(struct GuiButton *gbtn)
+{
+    if (player_has_room_of_role(my_player_number, RoRoF_DeadStorage))
+    {
+        gbtn->sprite_idx = GPS_rpanel_tendency_attacke_act;
+        gbtn->flags |= LbBtnF_Enabled;
+    } else
+    {
+        gbtn->sprite_idx = GPS_rpanel_tendency_attacke_act;
+        gbtn->flags &= ~LbBtnF_Enabled;
+    }
+}
+
 void maintain_room_button(struct GuiButton *gbtn)
 {
     PlayerNumber plyr_idx = gbtn->content.lval;

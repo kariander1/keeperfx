@@ -341,6 +341,8 @@ struct Game {
     TbBool creatures_tend_imprison;
     /** Flee tendency variable. Used for GUI only; the real tendency is a flag inside Dungeon. */
     TbBool creatures_tend_flee;
+    /** Graveyard tendency variable. Used for GUI only; the real tendency is a flag inside Dungeon. */
+    TbBool creatures_tend_graveyard;
     MapSubtlCoord hand_over_subtile_x;
     MapSubtlCoord hand_over_subtile_y;
     int chosen_room_kind;

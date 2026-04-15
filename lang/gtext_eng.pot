@@ -5862,4 +5862,9 @@ msgctxt "Game controls"
 msgid "Teleport Default"
 msgstr ""
 
+#: guitext:1110
+msgctxt "In-game interface description"
+msgid "Graveyard: Your Imps drag dead bodies to the Graveyard. Corpses stored there may rise as Vampires. LMB select."
+msgstr ""
+
 

@@ -295,6 +295,8 @@ TbBool player_creature_tends_to(PlayerNumber plyr_idx, unsigned short tend_type)
         return ((dungeon->creature_tendencies & CrTend_Imprison) != 0);
     case CrTend_Flee:
         return ((dungeon->creature_tendencies & CrTend_Flee) != 0);
+    case CrTend_Graveyard:
+        return ((dungeon->creature_tendencies & CrTend_Graveyard) != 0);
     default:
         ERRORLOG("Bad tendency type %d",(int)tend_type);
         return false;
@@ -311,6 +313,9 @@ TbBool toggle_creature_tendencies(struct PlayerInfo *player, unsigned short tend
         return true;
     case CrTend_Flee:
         dungeon->creature_tendencies ^= CrTend_Flee;
+        return true;
+    case CrTend_Graveyard:
+        dungeon->creature_tendencies ^= CrTend_Graveyard;
         return true;
     case CrTend_Imprison | CrTend_Flee:
         // Toggle both tendencies when combined value is passed
@@ -336,6 +341,9 @@ TbBool set_creature_tendencies(struct PlayerInfo *player, unsigned short tend_ty
         return true;
     case CrTend_Flee:
         set_flag_value(dungeon->creature_tendencies, CrTend_Flee, val);
+        return true;
+    case CrTend_Graveyard:
+        set_flag_value(dungeon->creature_tendencies, CrTend_Graveyard, val);
         return true;
     default:
         ERRORLOG("Can't set tendency; bad tendency type %d",(int)tend_type);
@@ -560,6 +568,7 @@ void init_dungeons(void)
         dungeon->modifier.scavenging_cost = 100;
         dungeon->modifier.loyalty = 100;
         dungeon->color_idx = i;
+        dungeon->creature_tendencies = CrTend_Graveyard;
         memset(dungeon->creature_models_joined, 0, CREATURE_TYPES_MAX);
     }
 }

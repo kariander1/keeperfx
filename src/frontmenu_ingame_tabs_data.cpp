@@ -112,6 +112,7 @@ void maintain_event_button(struct GuiButton *gbtn);
 void gui_toggle_ally(struct GuiButton *gbtn);
 void maintain_ally(struct GuiButton *gbtn);
 void maintain_prison_bar(struct GuiButton *gbtn);
+void maintain_graveyard_bar(struct GuiButton *gbtn);
 void maintain_room_button(struct GuiButton *gbtn);
 void maintain_creature_button(struct GuiButton* gbtn);
 void pick_up_next_wanderer(struct GuiButton *gbtn);
@@ -350,8 +351,9 @@ struct GuiButtonInit creature_menu_buttons[] = {
 struct GuiButtonInit query_menu_buttons[] = {
   {LbBtnT_NormalBtn,    BID_DEFAULT,      0, 0, gui_set_query,                NULL, NULL, 0,  44, 374,  44, 374, 52, 20, gui_area_new_normal_button,    GPS_rpanel_rpanel_btn_crinfo_act,      GUIStr_GoToQueryMode,        0,       {0},            0, maintain_query_button },
   {LbBtnT_NormalBtn,    BID_QUERY_2,      0, 0, gui_switch_players_visible,   NULL, NULL, 0,  14, 374,  14, 374, 52, 20, gui_area_new_normal_button,    GPS_rpanel_rpanel_btn_nxpage_act,      GUIStr_MoreInformation,      0,       {0},            0, maintain_player_page2 },
-  {LbBtnT_ToggleBtn,    BID_QRY_IMPRSN,   0, 0, gui_set_tend_to, NULL, NULL, 1,  36, 190,  36, 190, 32, 26, gui_area_flash_cycle_button,   GPS_rpanel_tendency_prisne_act,        GUIStr_CreatureImprisonDesc, 0,{.ptr = &game.creatures_tend_imprison}, 1, maintain_prison_bar },
-  {LbBtnT_ToggleBtn,    BID_QRY_FLEE,     0, 0, gui_set_tend_to, NULL, NULL, 2,  74, 190,  74, 190, 32, 26, gui_area_flash_cycle_button,   GPS_rpanel_tendency_fleee_act,         GUIStr_CreatureFleeDesc,     0,{.ptr = &game.creatures_tend_flee}, 1, NULL },
+  {LbBtnT_ToggleBtn,    BID_QRY_IMPRSN,   0, 0, gui_set_tend_to, NULL, NULL, 1,  16, 190,  16, 190, 32, 26, gui_area_flash_cycle_button,   GPS_rpanel_tendency_prisne_act,        GUIStr_CreatureImprisonDesc, 0,{.ptr = &game.creatures_tend_imprison}, 1, maintain_prison_bar },
+  {LbBtnT_ToggleBtn,    BID_QRY_BTN3,     0, 0, gui_set_tend_to, NULL, NULL, 4,  52, 190,  52, 190, 32, 26, gui_area_flash_cycle_button,   GPS_rpanel_tendency_attacke_act,       GUIStr_CreatureGraveyardDesc, 0,{.ptr = &game.creatures_tend_graveyard}, 1, maintain_graveyard_bar },
+  {LbBtnT_ToggleBtn,    BID_QRY_FLEE,     0, 0, gui_set_tend_to, NULL, NULL, 2,  88, 190,  88, 190, 32, 26, gui_area_flash_cycle_button,   GPS_rpanel_tendency_fleee_act,         GUIStr_CreatureFleeDesc,     0,{.ptr = &game.creatures_tend_flee}, 1, NULL },
   {LbBtnT_NormalBtn,    BID_DEFAULT,      0, 0, NULL,            NULL, NULL, 0,   4, 216,   4, 222,132, 24, gui_area_payday_button,        GPS_rpanel_rpanel_payday_counter,      GUIStr_PayTimeDesc,          0,       {0},            0, NULL },
   {LbBtnT_NormalBtn,    BID_DEFAULT,      0, 0, NULL,            NULL, NULL, 0,   2, 246,   2, 246, 60, 24, gui_area_research_bar,         GPS_room_research_std_s,               GUIStr_ResearchTimeDesc,     0,       {0},            0, NULL },
   {LbBtnT_NormalBtn,    BID_DEFAULT,      0, 0, NULL,            NULL, NULL, 0,  74, 246,  74, 246, 60, 24, gui_area_workshop_bar,         GPS_room_workshop_std_s,               GUIStr_WorkshopTimeDesc,     0,       {0},            0, NULL },

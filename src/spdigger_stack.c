@@ -1936,6 +1936,9 @@ int add_unclaimed_dead_bodies_to_imp_stack(struct Dungeon *dungeon, int max_task
         SYNCDBG(8,"Dungeon %d has no %s",(int)dungeon->owner,room_role_code_name(RoRoF_DeadStorage));
         return 0;
     }
+    if (!player_creature_tends_to(dungeon->owner, CrTend_Graveyard)) {
+        return 0;
+    }
     room = find_room_of_role_with_spare_capacity(dungeon->owner, RoRoF_DeadStorage, 1);
     const struct StructureList *slist;
     slist = get_list_for_thing_class(TCls_DeadCreature);
@@ -3120,6 +3123,9 @@ long check_out_worker_pickup_corpse(struct Thing *creatng, struct DiggerStack *d
     stl_x = stl_num_decode_x(dstack->stl_num);
     stl_y = stl_num_decode_y(dstack->stl_num);
     if (!player_has_room_of_role(creatng->owner, RoRoF_DeadStorage)) {
+        return 0;
+    }
+    if (!player_creature_tends_to(creatng->owner, CrTend_Graveyard)) {
         return 0;
     }
     struct Thing *deadtng;
