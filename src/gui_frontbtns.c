@@ -630,13 +630,24 @@ void gui_area_creatrmodel_button(struct GuiButton *gbtn)
     {
         ThingModel crmodel = breed_activities[(top_of_breed_list + i) % game.conf.crtr_conf.model_count];
         struct Dungeon* dungeon = get_players_num_dungeon(my_player_number);
-        if (!dungeon_invalid(dungeon) && creature_will_generate_for_dungeon(dungeon, crmodel) && game.pool.crtr_kind[crmodel] > 0)
+        if (crmodel > 0 && crmodel < game.conf.crtr_conf.model_count
+            && !dungeon_invalid(dungeon) && dungeon->creature_allowed[crmodel])
         {
+            int pool_count = game.pool.crtr_kind[crmodel];
             char pool_text[8];
-            snprintf(pool_text, sizeof(pool_text), "+%d", game.pool.crtr_kind[crmodel]);
+            if (pool_count > 0)
+                snprintf(pool_text, sizeof(pool_text), "+%d", pool_count);
+            else
+                snprintf(pool_text, sizeof(pool_text), "0");
             LbTextSetFont(winfont);
             unsigned long flgmem = lbDisplay.DrawFlags;
-            lbDisplay.DrawFlags = 0;
+            if (creature_will_generate_for_dungeon(dungeon, crmodel))
+            {
+                lbDisplay.DrawFlags = 0;
+            } else
+            {
+                lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+            }
             int tx_units = (gbtn->width * 16 + 22 / 2) / 22;
             int half_units = tx_units / 2;
             int text_w = LbTextStringWidthM(pool_text, half_units);

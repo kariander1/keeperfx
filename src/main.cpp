@@ -1295,7 +1295,6 @@ void update_creatr_model_activities_list(TbBool forced)
     struct Dungeon *dungeon = get_my_dungeon();
     ThingModel crmodel;
     int num_breeds = no_of_breeds_owned;
-    TbBool changed = false;
 
     // Add to breed activities (owned creatures)
     for (crmodel = 1; crmodel < game.conf.crtr_conf.model_count; crmodel++)
@@ -1314,18 +1313,17 @@ void update_creatr_model_activities_list(TbBool forced)
             }
             if (!found)
             {
-                changed = true;
                 breed_activities[num_breeds] = crmodel;
                 num_breeds++;
             }
         }
     }
 
-    // Add attractable creatures (not yet owned, but available in pool)
+    // Add available creatures (not yet owned, but allowed for player)
     for (crmodel = 1; crmodel < game.conf.crtr_conf.model_count; crmodel++)
     {
         if ((dungeon->owned_creatures_of_model[crmodel] <= 0)
-            && creature_will_generate_for_dungeon(dungeon, crmodel)
+            && (dungeon->creature_allowed[crmodel])
             && (crmodel != get_players_spectator_model(my_player_number)))
         {
             TbBool found = false;
@@ -1339,18 +1337,17 @@ void update_creatr_model_activities_list(TbBool forced)
             }
             if (!found)
             {
-                changed = true;
                 breed_activities[num_breeds] = crmodel;
                 num_breeds++;
             }
         }
     }
 
-    // Remove from breed activities (only if not owned AND not attractable)
+    // Remove from breed activities (only if not owned AND not allowed)
     for (crmodel = 1; crmodel < game.conf.crtr_conf.model_count; crmodel++)
     {
         if ((dungeon->owned_creatures_of_model[crmodel] <= 0)
-          && !creature_will_generate_for_dungeon(dungeon, crmodel)
+          && !dungeon->creature_allowed[crmodel]
           && (crmodel != get_players_special_digger_model(my_player_number)))
         {
             for (int i = 0; i < num_breeds; i++)
@@ -1360,7 +1357,6 @@ void update_creatr_model_activities_list(TbBool forced)
                     for (; i < num_breeds-1;  i++) {
                         breed_activities[i] = breed_activities[i+1];
                     }
-                    changed = true;
                     num_breeds--;
                     breed_activities[i] = 0;
                     break;
@@ -1370,22 +1366,72 @@ void update_creatr_model_activities_list(TbBool forced)
         no_of_breeds_owned = num_breeds;
     }
 
-    // Reorder breed activities to ensure diggers are correctly positioned
-    if (changed || forced)
+    // Reorder breed activities: diggers, owned, attractable, available (not yet attractable)
     {
         struct CreatureModelConfig* crconf;
-        ThingModel temp;
-        int write_idx = 1;
-        for (int i = 1; i < num_breeds; i++)
+        ThingModel sorted[CREATURE_TYPES_MAX];
+        int sorted_count = 0;
+        // Pass 1: diggers
+        for (int i = 0; i < num_breeds; i++)
         {
             crconf = &game.conf.crtr_conf.model[breed_activities[i]];
             if (any_flag_is_set(crconf->model_flags, (CMF_IsDiggingCreature | CMF_IsSpecDigger)))
             {
-                temp = breed_activities[i];
-                memmove(&breed_activities[write_idx + 1], &breed_activities[write_idx], (i - write_idx) * sizeof(ThingModel));
-                breed_activities[write_idx] = temp;
-                write_idx++;
+                sorted[sorted_count++] = breed_activities[i];
             }
+        }
+        // Pass 2: owned non-diggers
+        for (int i = 0; i < num_breeds; i++)
+        {
+            crconf = &game.conf.crtr_conf.model[breed_activities[i]];
+            if (any_flag_is_set(crconf->model_flags, (CMF_IsDiggingCreature | CMF_IsSpecDigger)))
+                continue;
+            if (dungeon->owned_creatures_of_model[breed_activities[i]] > 0)
+            {
+                sorted[sorted_count++] = breed_activities[i];
+            }
+        }
+        // Pass 3: not owned, not digger, attractable (room requirements met, pool > 0)
+        for (int i = 0; i < num_breeds; i++)
+        {
+            crconf = &game.conf.crtr_conf.model[breed_activities[i]];
+            if (any_flag_is_set(crconf->model_flags, (CMF_IsDiggingCreature | CMF_IsSpecDigger)))
+                continue;
+            if (dungeon->owned_creatures_of_model[breed_activities[i]] <= 0
+                && game.pool.crtr_kind[breed_activities[i]] > 0
+                && creature_will_generate_for_dungeon(dungeon, breed_activities[i]))
+            {
+                sorted[sorted_count++] = breed_activities[i];
+            }
+        }
+        // Pass 4: not owned, not digger, pool > 0, but room requirements not met
+        for (int i = 0; i < num_breeds; i++)
+        {
+            crconf = &game.conf.crtr_conf.model[breed_activities[i]];
+            if (any_flag_is_set(crconf->model_flags, (CMF_IsDiggingCreature | CMF_IsSpecDigger)))
+                continue;
+            if (dungeon->owned_creatures_of_model[breed_activities[i]] <= 0
+                && game.pool.crtr_kind[breed_activities[i]] > 0
+                && !creature_will_generate_for_dungeon(dungeon, breed_activities[i]))
+            {
+                sorted[sorted_count++] = breed_activities[i];
+            }
+        }
+        // Pass 5: not owned, not digger, pool empty
+        for (int i = 0; i < num_breeds; i++)
+        {
+            crconf = &game.conf.crtr_conf.model[breed_activities[i]];
+            if (any_flag_is_set(crconf->model_flags, (CMF_IsDiggingCreature | CMF_IsSpecDigger)))
+                continue;
+            if (dungeon->owned_creatures_of_model[breed_activities[i]] <= 0
+                && game.pool.crtr_kind[breed_activities[i]] <= 0)
+            {
+                sorted[sorted_count++] = breed_activities[i];
+            }
+        }
+        for (int i = 0; i < sorted_count; i++)
+        {
+            breed_activities[i] = sorted[i];
         }
     }
 }
