@@ -506,7 +506,16 @@ TbBool process_dungeon_control_packet_dungeon_control(long plyr_idx)
         {
             if (!power_hand_is_empty(player) && (!player->one_click_lock_cursor))
             {
-                if (dump_first_held_thing_on_map(player->id_number, stl_x, stl_y, 1)) {
+                if (lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL])
+                {
+                    dump_all_held_things_on_map(player->id_number, stl_x, stl_y);
+                    if ((pckt->control_flags & PCtr_LBtnHeld) == 0)
+                    {
+                        player->cursor_button_down = 0;
+                    }
+                    unset_packet_control(pckt, PCtr_RBtnRelease);
+                }
+                else if (dump_first_held_thing_on_map(player->id_number, stl_x, stl_y, 1)) {
                     if ((pckt->control_flags & PCtr_LBtnHeld) == 0)
                     {
                         player->cursor_button_down = 0;
