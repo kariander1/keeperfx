@@ -546,7 +546,7 @@ short get_bookmark_inputs(void)
         struct Bookmark* bmark = &game.bookmark[i];
         int kcode = KC_1 + i;
         // Store bookmark check
-        if (is_key_pressed(kcode, KMod_CONTROL))
+        if (is_key_pressed(kcode, KMod_CONTROL | KMod_SHIFT))
         {
             clear_key_pressed(kcode);
             struct Camera* camera = get_player_active_camera(player);
@@ -1110,8 +1110,8 @@ static void get_creature_group_inputs(void)
     for (int i = 0; i < CUSTOM_GROUPS_COUNT; i++)
     {
         int kcode = KC_1 + i;
-        // Ctrl+Shift+num: assign creature in hand to group
-        if (is_key_pressed(kcode, KMod_CONTROL | KMod_SHIFT))
+        // Ctrl+num: assign creature in hand to group
+        if (is_key_pressed(kcode, KMod_CONTROL))
         {
             clear_key_pressed(kcode);
             struct Dungeon *dungeon = get_players_num_dungeon(my_player_number);
