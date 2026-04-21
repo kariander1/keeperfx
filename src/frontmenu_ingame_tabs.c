@@ -1493,7 +1493,7 @@ void gui_creature_query_background2(struct GuiMenu *gmnu)
 unsigned short get_creature_pick_flags(TbBool pick_up)
 {
     unsigned short pick_flags = pick_up ? TPF_PickableCheck : 0;
-    if (lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL])
+    if (lbKeyOn[KC_LALT] || lbKeyOn[KC_RALT])
     {
         pick_flags |= TPF_OrderedPick;
     }
@@ -1515,6 +1515,11 @@ void pick_up_creature_doing_activity(struct GuiButton *gbtn)
         crmodel = get_players_special_digger_model(my_player_number);
     // Get index from pointer
     long job_idx = (gbtn->content.lptr - &activity_list[0]);
+    if (lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL])
+    {
+        set_players_packet_action(get_player(my_player_number), PckA_BulkPickupByJob, crmodel, (job_idx & 0x03), 0, 0);
+        return;
+    }
     unsigned char pick_flags = get_creature_pick_flags(1);
     pick_up_creature_of_model_and_gui_job(crmodel, (job_idx & 0x03), my_player_number, pick_flags);
 }
@@ -2359,6 +2364,11 @@ void maintain_compsetting_button(struct GuiButton* gbtn)
 
 void pick_up_next_wanderer(struct GuiButton *gbtn)
 {
+    if (lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL])
+    {
+        set_players_packet_action(get_player(my_player_number), PckA_BulkPickupByJob, CREATURE_ANY, CrGUIJob_Wandering, 0, 0);
+        return;
+    }
     unsigned short pick_flags = get_creature_pick_flags(1);
     pick_up_creature_of_model_and_gui_job(CREATURE_ANY, CrGUIJob_Wandering, my_player_number, pick_flags);
 }
@@ -2371,6 +2381,11 @@ void gui_go_to_next_wanderer(struct GuiButton *gbtn)
 
 void pick_up_next_worker(struct GuiButton *gbtn)
 {
+    if (lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL])
+    {
+        set_players_packet_action(get_player(my_player_number), PckA_BulkPickupByJob, CREATURE_ANY, CrGUIJob_Working, 0, 0);
+        return;
+    }
     unsigned short pick_flags = get_creature_pick_flags(1);
     pick_up_creature_of_model_and_gui_job(CREATURE_ANY, CrGUIJob_Working, my_player_number, pick_flags);
 }
@@ -2383,6 +2398,11 @@ void gui_go_to_next_worker(struct GuiButton *gbtn)
 
 void pick_up_next_fighter(struct GuiButton *gbtn)
 {
+    if (lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL])
+    {
+        set_players_packet_action(get_player(my_player_number), PckA_BulkPickupByJob, CREATURE_ANY, CrGUIJob_Fighting, 0, 0);
+        return;
+    }
     unsigned short pick_flags = get_creature_pick_flags(1);
     pick_up_creature_of_model_and_gui_job(CREATURE_ANY, CrGUIJob_Fighting, my_player_number, pick_flags);
 }

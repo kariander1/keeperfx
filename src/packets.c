@@ -1171,6 +1171,11 @@ TbBool process_players_global_packet_action(PlayerNumber plyr_idx)
         pickup_custom_creature_group(plyr_idx, pckt->actn_par1);
         return 0;
     }
+    case PckA_BulkPickupByJob:
+    {
+        pickup_all_creatures_of_model_and_gui_job(pckt->actn_par1, pckt->actn_par2, plyr_idx);
+        return 0;
+    }
     default:
       return process_players_global_cheats_packet_action(plyr_idx, pckt);
   }

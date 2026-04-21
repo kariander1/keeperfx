@@ -5574,6 +5574,49 @@ struct Thing *pick_up_creature_of_model_and_gui_job(long crmodel, long job_idx, 
     return thing;
 }
 
+void pickup_all_creatures_of_model_and_gui_job(long crmodel, long job_idx, PlayerNumber plyr_idx)
+{
+    struct Dungeon *dungeon = get_players_num_dungeon(plyr_idx);
+    if (dungeon_invalid(dungeon))
+        return;
+    struct PlayerInfo *player = get_player(plyr_idx);
+    int count = 0;
+    for (int list = 0; list < 2; list++)
+    {
+        long i = (list == 0) ? dungeon->creatr_list_start : dungeon->digger_list_start;
+        unsigned long k = 0;
+        while (i != 0)
+        {
+            struct Thing *thing = thing_get(i);
+            struct CreatureControl *cctrl = creature_control_get_from_thing(thing);
+            if (thing_is_invalid(thing) || creature_control_invalid(cctrl))
+            {
+                ERRORLOG("Jump to invalid creature detected");
+                break;
+            }
+            i = cctrl->players_next_creature_idx;
+            if ((crmodel == CREATURE_ANY || thing->model == crmodel)
+                && (job_idx == -1 || get_creature_gui_job(thing) == job_idx)
+                && can_thing_be_picked_up_by_player(thing, plyr_idx))
+            {
+                if (power_hand_is_full(player))
+                    break;
+                magic_use_available_power_on_thing(plyr_idx, PwrK_HAND, 0,
+                    thing->mappos.x.stl.num, thing->mappos.y.stl.num, thing, PwMod_Default);
+                count++;
+            }
+            k++;
+            if (k > CREATURES_COUNT)
+            {
+                ERRORLOG("Infinite loop detected when sweeping creatures list");
+                break;
+            }
+        }
+    }
+    SYNCDBG(5, "Picked up %d creatures of model %d and GUI job %d for player %d",
+        count, (int)crmodel, (int)job_idx, (int)plyr_idx);
+}
+
 /**
  *
  * @param crmodel

@@ -196,6 +196,7 @@ enum TbPacketAction {
         PckA_SpriteZipCountSync,
         PckA_CreatureGroupAssign,   // par1 = group_index (0-8), par2 = thing_index
         PckA_CreatureGroupRecall,   // par1 = group_index (0-8)
+        PckA_BulkPickupByJob,       // par1 = crmodel, par2 = job_idx
 };
 
 /** Packet flags for non-action player operation. */
