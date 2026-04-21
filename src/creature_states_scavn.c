@@ -43,6 +43,7 @@
 #include "room_lair.h"
 #include "power_hand.h"
 #include "gui_soundmsgs.h"
+#include "gui_msgs.h"
 #include "game_legacy.h"
 #include "post_inc.h"
 
@@ -139,6 +140,12 @@ struct Thing *get_random_fellow_not_hated_creature(struct Thing *creatng)
 short creature_being_scavenged(struct Thing *creatng)
 {
     SYNCDBG(8,"Starting");
+    // Periodically play creature-specific angry sound while being scavenged
+    if ((game.play_gameturn & 0x3F) == 0)
+    {
+        WARNLOG("Playing angry sound for %s index %d (being scavenged), turn %ld",thing_model_name(creatng),(int)creatng->index,(long)game.play_gameturn);
+        play_creature_sound(creatng, CrSnd_Piss, 3, 0);
+    }
     struct Thing* fellowtng = get_random_fellow_not_hated_creature(creatng);
     if (thing_is_invalid(fellowtng)) {
         fellowtng = get_player_soul_container(creatng->owner);
@@ -196,8 +203,15 @@ short creature_scavenged_disappear(struct Thing *thing)
         anger_set_creature_anger_all_types(thing, 0);
         if (is_my_player_number(thing->owner))
           output_message(SMsg_MinionScanvenged, 0);
+        PlayerNumber scavenging_player = cctrl->scavenge.effect_id;
         cctrl->scavenge.previous_owner = thing->owner;
-        change_creature_owner(thing, cctrl->scavenge.effect_id);
+        change_creature_owner(thing, scavenging_player);
+        if (is_my_player_number(scavenging_player))
+        {
+            output_message(SMsg_CreaturesJoinedYou, MESSAGE_DURATION_CRTR_JOINED);
+            message_add_fmt_timeout(MsgType_Creature, thing->model, GUI_CREATURE_MESSAGES_DELAY,
+                "A %s was scavenged to your dungeon", creature_code_name(thing->model));
+        }
         internal_set_thing_state(thing, CrSt_CreatureScavengedReappear);
         return 0;
     } else
@@ -488,6 +502,12 @@ TbBool creature_scavenge_from_creature_pool(struct Thing *calltng)
         dungeon->creatures_scavenge_gain++;
     }
     internal_set_thing_state(scavtng, CrSt_CreatureScavengedReappear);
+    if (is_my_player_number(calltng->owner))
+    {
+        output_message(SMsg_CreaturesJoinedYou, MESSAGE_DURATION_CRTR_JOINED);
+        message_add_fmt_timeout(MsgType_Creature, calltng->model, GUI_CREATURE_MESSAGES_DELAY,
+            "A %s was scavenged to your dungeon", creature_code_name(calltng->model));
+    }
     return true;
 }
 
@@ -495,7 +515,15 @@ TbBool process_scavenge_creature_from_pool(struct Thing *calltng, long work_valu
 {
     struct Dungeon* calldngn = get_dungeon(calltng->owner);
     calldngn->scavenge_turn_points[calltng->model] += work_value;
-    long scavpts = calculate_correct_creature_scavenge_required(calltng, calltng->owner);
+    // Use base loyalty (level 1) for pool scavenging threshold — the pool target
+    // doesn't exist yet, so the difficulty should not depend on the scavenger's level.
+    struct CreatureModelConfig* crconf = creature_stats_get_from_thing(calltng);
+    long base_loyalty = crconf->scavenge_require;
+    if (!is_neutral_thing(calltng))
+    {
+        base_loyalty = (base_loyalty * calldngn->modifier.loyalty) / 100;
+    }
+    long scavpts = (calldngn->creatures_scavenged[calltng->model] + 1) * base_loyalty;
     if ((scavpts << 8) < calldngn->scavenge_turn_points[calltng->model])
     {
         if (creature_scavenge_from_creature_pool(calltng))

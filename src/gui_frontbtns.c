@@ -38,12 +38,28 @@
 #include "room_entrance.h"
 #include "dungeon_data.h"
 #include "config_creature.h"
+#include "thing_data.h"
+#include "thing_stats.h"
+#include "player_data.h"
+#include "vidfade.h"
 #include "post_inc.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 /******************************************************************************/
+
+// Scavenge bar timeout: hide bar after this many game turns with no points change
+#define SCAVENGE_BAR_TIMEOUT 2400
+
+// Tracking for our scavenge bar timeout per creature model
+static int32_t scav_bar_last_points[CREATURE_TYPES_MAX];
+static GameTurn scav_bar_last_change[CREATURE_TYPES_MAX];
+
+// Tracking for enemy scavenge bar timeout per creature model
+static int32_t enemy_scav_bar_last_points[CREATURE_TYPES_MAX];
+static GameTurn enemy_scav_bar_last_change[CREATURE_TYPES_MAX];
+
 void gui_clear_buttons_not_over_mouse(int gmbtn_mouseover_idx)
 {
     struct GuiButton *gbtn;
@@ -658,6 +674,103 @@ void gui_area_creatrmodel_button(struct GuiButton *gbtn)
             LbTextSetClipWindow(gbtn->scr_pos_x, gbtn->pos_y, area_w, area_h);
             LbTextDrawResized(area_w - text_w, area_h - text_h, half_units, pool_text);
             lbDisplay.DrawFlags = flgmem;
+        }
+        // Draw scavenge progress bar at bottom of button
+        int icon_w = gbtn->width * 138 / 100;
+        int bar_pad = icon_w / 5;
+        int bar_w = icon_w - bar_pad * 2;
+        int bar_h = 3;
+        int bar_x = gbtn->scr_pos_x + bar_pad;
+        int bar_y = gbtn->pos_y + gbtn->height - bar_h + 1;
+        // Our scavenge progress (player color) with timeout
+        if (!dungeon_invalid(dungeon) && dungeon->scavenge_turn_points[crmodel] > 0)
+        {
+            // Track points changes for timeout
+            int32_t cur_points = dungeon->scavenge_turn_points[crmodel];
+            if (cur_points != scav_bar_last_points[crmodel])
+            {
+                scav_bar_last_points[crmodel] = cur_points;
+                scav_bar_last_change[crmodel] = game.play_gameturn;
+            }
+            // Only show if points changed recently
+            if (game.play_gameturn - scav_bar_last_change[crmodel] < SCAVENGE_BAR_TIMEOUT)
+            {
+                long scvg_required;
+                struct Thing *scvgtarget = thing_get(dungeon->scavenge_targets[crmodel]);
+                if (!thing_is_invalid(scvgtarget))
+                    scvg_required = calculate_correct_creature_scavenge_required(scvgtarget, my_player_number) << 8;
+                else
+                    scvg_required = ((long)(dungeon->creatures_scavenged[crmodel] + 1)
+                        * game.conf.crtr_conf.model[crmodel].scavenge_require) << 8;
+                if (scvg_required > 0)
+                {
+                    long scvg_points = dungeon->scavenge_turn_points[crmodel];
+                    if (scvg_points > scvg_required)
+                        scvg_points = scvg_required;
+                    LbDrawBox(bar_x, bar_y, bar_w, bar_h, colours[0][0][0]);
+                    int fill_w = (int)((long)bar_w * scvg_points / scvg_required);
+                    if (fill_w > 0)
+                        LbDrawBox(bar_x, bar_y, fill_w, bar_h, player_room_colours[get_player_color_idx(my_player_number)]);
+                }
+            }
+        }
+        else
+        {
+            // Points are 0 — reset tracking
+            scav_bar_last_points[crmodel] = 0;
+        }
+        // Enemy scavenge progress against our creatures (enemy color) with timeout
+        {
+            long best_points = 0;
+            long best_required = 0;
+            PlayerNumber best_enemy = -1;
+            for (PlayerNumber plyr = 0; plyr < DUNGEONS_COUNT; plyr++)
+            {
+                if (plyr == my_player_number)
+                    continue;
+                struct Dungeon *enemy_dngn = get_dungeon(plyr);
+                if (dungeon_invalid(enemy_dngn))
+                    continue;
+                if (enemy_dngn->scavenge_turn_points[crmodel] <= 0)
+                    continue;
+                struct Thing *target = thing_get(enemy_dngn->scavenge_targets[crmodel]);
+                if (thing_is_invalid(target) || target->owner != my_player_number)
+                    continue;
+                long req = calculate_correct_creature_scavenge_required(target, plyr) << 8;
+                if (req <= 0)
+                    continue;
+                long pts = enemy_dngn->scavenge_turn_points[crmodel];
+                if (pts * best_required > best_points * req || best_enemy < 0)
+                {
+                    best_points = pts;
+                    best_required = req;
+                    best_enemy = plyr;
+                }
+            }
+            if (best_enemy >= 0 && best_required > 0)
+            {
+                // Track points changes for timeout
+                if (best_points != enemy_scav_bar_last_points[crmodel])
+                {
+                    enemy_scav_bar_last_points[crmodel] = best_points;
+                    enemy_scav_bar_last_change[crmodel] = game.play_gameturn;
+                }
+                if (game.play_gameturn - enemy_scav_bar_last_change[crmodel] < SCAVENGE_BAR_TIMEOUT)
+                {
+                    int enemy_bar_y = bar_y + bar_h + 1;
+                    if (best_points > best_required)
+                        best_points = best_required;
+                    LbDrawBox(bar_x, enemy_bar_y, bar_w, bar_h, colours[0][0][0]);
+                    int fill_w = (int)((long)bar_w * best_points / best_required);
+                    if (fill_w > 0)
+                        LbDrawBox(bar_x, enemy_bar_y, fill_w, bar_h, player_room_colours[get_player_color_idx(best_enemy)]);
+                }
+            }
+            else
+            {
+                // No enemy scavenging — reset tracking
+                enemy_scav_bar_last_points[crmodel] = 0;
+            }
         }
     }
     SYNCDBG(12,"Finished");
