@@ -342,6 +342,7 @@ const struct NamedField trapdoor_trap_named_fields[] = {
     {"DESTROYEDEFFECT",        0, field(game.conf.trapdoor_conf.trap_cfgstats[0].destroyed_effect), -TngEffElm_Blast2,   INT32_MIN,         UINT32_MAX, NULL,                  value_effOrEffEl, assign_default},
     {"INITIALDELAY",           0, field(game.conf.trapdoor_conf.trap_cfgstats[0].initial_delay),                    0,   INT32_MIN,         UINT32_MAX, NULL,                     value_default, assign_default},
     {"PLACEONSUBTILE",         0, field(game.conf.trapdoor_conf.trap_cfgstats[0].place_on_subtile),                 0,   INT32_MIN,         UINT32_MAX, NULL,                     value_default, assign_default},
+    {"STACKABLE",              0, field(game.conf.trapdoor_conf.trap_cfgstats[0].stackable),                      0,   INT32_MIN,         UINT32_MAX, NULL,                     value_default, assign_default},
     {"FLAMEANIMATIONID",       0, field(game.conf.trapdoor_conf.trap_cfgstats[0].flame.animation_id),               0,   INT32_MIN,         UINT32_MAX, NULL,                      value_animid, assign_refresh_trap_anim_anim_id},
     {"FLAMEANIMATIONSPEED",    0, field(game.conf.trapdoor_conf.trap_cfgstats[0].flame.anim_speed),                 0,   INT32_MIN,         UINT32_MAX, NULL,                     value_default, assign_default},
     {"FLAMEANIMATIONSIZE",     0, field(game.conf.trapdoor_conf.trap_cfgstats[0].flame.sprite_size),                0,   INT32_MIN,         UINT32_MAX, NULL,                     value_default, assign_default},

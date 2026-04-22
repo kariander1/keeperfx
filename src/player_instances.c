@@ -1247,6 +1247,14 @@ TbBool player_place_trap_without_check_at(MapSubtlCoord stl_x, MapSubtlCoord stl
     {
         set_coords_to_subtile_center(&pos, stl_x, stl_y, 1);
     }
+    else if (trap_cfg->stackable)
+    {
+        MapSubtlCoord place_stl_x, place_stl_y;
+        if (find_trap_placement_subtile(stl_x, stl_y, &place_stl_x, &place_stl_y))
+            set_coords_to_subtile_center(&pos, place_stl_x, place_stl_y, 1);
+        else
+            set_coords_to_slab_center(&pos, subtile_slab(stl_x), subtile_slab(stl_y));
+    }
     else
     {
         set_coords_to_slab_center(&pos, subtile_slab(stl_x), subtile_slab(stl_y));

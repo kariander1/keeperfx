@@ -1187,8 +1187,17 @@ TbBool player_sell_trap_at_subtile(PlayerNumber plyr_idx, MapSubtlCoord stl_x, M
         {
             return false;
         }
-        set_coords_to_slab_center(&pos,slb_x,slb_y);
-        traps_sold = remove_traps_around_subtile(slab_subtile_center(slb_x), slab_subtile_center(slb_y), &sell_value);
+        struct TrapConfigStats* trap_cfg = get_trap_model_stats(thing->model);
+        if (trap_cfg->stackable)
+        {
+            set_coords_to_subtile_center(&pos, thing->mappos.x.stl.num, thing->mappos.y.stl.num, 1);
+            traps_sold = remove_trap(thing, &sell_value);
+        }
+        else
+        {
+            set_coords_to_slab_center(&pos,slb_x,slb_y);
+            traps_sold = remove_traps_around_subtile(slab_subtile_center(slb_x), slab_subtile_center(slb_y), &sell_value);
+        }
     }
 
     struct Dungeon* dungeon = get_dungeon(thing->owner);

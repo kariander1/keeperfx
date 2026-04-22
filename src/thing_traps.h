@@ -101,6 +101,8 @@ void set_trap_shots(struct Thing *traptng, int shots);
 unsigned long remove_trap(struct Thing *traptng, int32_t *sell_value);
 unsigned long remove_trap_on_subtile(MapSubtlCoord stl_x, MapSubtlCoord stl_y, int32_t *sell_value);
 unsigned long remove_traps_around_subtile(MapSubtlCoord stl_x, MapSubtlCoord stl_y, int32_t *sell_value);
+TbBool find_trap_placement_subtile(MapSubtlCoord stl_x, MapSubtlCoord stl_y,
+    MapSubtlCoord *out_stl_x, MapSubtlCoord *out_stl_y);
 
 void external_activate_trap_shot_at_angle(struct Thing *thing, short angle, struct Thing *trgtng);
 void trap_fire_shot_without_target(struct Thing *firing, ThingModel shot_model, CrtrExpLevel shot_level, short angle_xy);

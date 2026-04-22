@@ -86,6 +86,7 @@ struct TrapConfigStats {
     TbBool notify;
     TbBool place_on_bridge;
     TbBool place_on_subtile;
+    TbBool stackable;
     TbBool instant_placement;
     TbBool remove_once_depleted;
     HitPoints health;

@@ -1216,6 +1216,44 @@ TbBool trap_on_bridge(ThingModel trpkind)
     return trapst->place_on_bridge;
 }
 
+/** Priority order for stacking traps on a slab: center, center row, corners (diagonal pairs), edges. */
+static const int trap_stack_order[][2] = {
+    {1, 1}, // center
+    {0, 1}, // left-mid
+    {2, 1}, // right-mid
+    {0, 0}, // top-left corner
+    {2, 2}, // bottom-right corner
+    {2, 0}, // top-right corner
+    {0, 2}, // bottom-left corner
+    {1, 0}, // top-mid
+    {1, 2}, // bottom-mid
+};
+
+static TbBool find_free_trap_subtile_on_slab(MapSlabCoord slb_x, MapSlabCoord slb_y,
+    MapSubtlCoord *out_stl_x, MapSubtlCoord *out_stl_y)
+{
+    for (int i = 0; i < sizeof(trap_stack_order) / sizeof(trap_stack_order[0]); i++)
+    {
+        MapSubtlCoord sx = slab_subtile(slb_x, trap_stack_order[i][0]);
+        MapSubtlCoord sy = slab_subtile(slb_y, trap_stack_order[i][1]);
+        if (!subtile_has_trap_on(sx, sy))
+        {
+            *out_stl_x = sx;
+            *out_stl_y = sy;
+            return true;
+        }
+    }
+    return false;
+}
+
+TbBool find_trap_placement_subtile(MapSubtlCoord stl_x, MapSubtlCoord stl_y,
+    MapSubtlCoord *out_stl_x, MapSubtlCoord *out_stl_y)
+{
+    MapSlabCoord slb_x = subtile_slab(stl_x);
+    MapSlabCoord slb_y = subtile_slab(stl_y);
+    return find_free_trap_subtile_on_slab(slb_x, slb_y, out_stl_x, out_stl_y);
+}
+
 TbBool can_place_trap_on(PlayerNumber plyr_idx, MapSubtlCoord stl_x, MapSubtlCoord stl_y, ThingModel trpkind)
 {
     MapSlabCoord slb_x = subtile_slab(stl_x);
@@ -1239,8 +1277,16 @@ TbBool can_place_trap_on(PlayerNumber plyr_idx, MapSubtlCoord stl_x, MapSubtlCoo
     {
         if (trap_cfg->place_on_subtile == false)
         {
-                HasTrap = slab_has_trap_on(slb_x, slb_y);
                 HasDoor = slab_is_door(slb_x, slb_y);
+                if (trap_cfg->stackable)
+                {
+                    MapSubtlCoord free_x, free_y;
+                    HasTrap = !find_free_trap_subtile_on_slab(slb_x, slb_y, &free_x, &free_y);
+                }
+                else
+                {
+                    HasTrap = slab_has_trap_on(slb_x, slb_y);
+                }
         }
         else
         {
