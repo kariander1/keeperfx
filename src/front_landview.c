@@ -1165,7 +1165,8 @@ TbBool frontmap_load(void)
         map_flag = load_spritesheet("ldata/lndflag_ens.dat", "ldata/lndflag_ens.tab");
         break;
     }
-    if (!map_flag)
+    map_font = load_spritesheet("ldata/netfont.dat", "ldata/netfont.tab");
+    if (!map_flag || !map_font)
     {
         ERRORLOG("Unable to load Land View Screen sprites");
         frontend_load_data_reset();
@@ -1271,6 +1272,54 @@ TbBool test_hand_slap_collides(PlayerNumber plyr_idx)
   return false;
 }
 
+void draw_map_level_descriptions(void);
+
+void draw_transferred_creature_display(void)
+{
+    TbBool has_any = false;
+    for (int i = 0; i < TRANSFER_CREATURE_STORAGE_COUNT; i++)
+    {
+        if (intralvl.transferred_creatures[my_player_number][i].model != 0)
+        {
+            has_any = true;
+            break;
+        }
+    }
+    if (!has_any)
+        return;
+    lbDisplay.DrawFlags = 0;
+    LbTextSetFont(map_font);
+    LbTextSetWindow(0, 0, lbDisplay.PhysicalScreenWidth, lbDisplay.PhysicalScreenHeight);
+    const char* title = get_string(GUIStr_SpecTransferCreature);
+    long th = LbTextHeight(title);
+    long base_x = 4;
+    long title_w = LbTextStringWidth(title);
+    long title_y = 4;
+    LbDrawBox(scale_value_landview(base_x - 4), scale_value_landview(title_y),
+        scale_value_landview(title_w + 8), scale_value_landview(th), 0);
+    LbTextDrawResized(scale_value_landview(base_x), scale_value_landview(title_y),
+        units_per_pixel_landview, title);
+    int drawn = 0;
+    for (int i = 0; i < TRANSFER_CREATURE_STORAGE_COUNT; i++)
+    {
+        struct CreatureStorage* cstore =
+            &intralvl.transferred_creatures[my_player_number][i];
+        if (cstore->model == 0)
+            continue;
+        struct CreatureModelConfig* crconf = &game.conf.crtr_conf.model[cstore->model];
+        char label[64];
+        snprintf(label, sizeof(label), "  %s L%d",
+            get_string(crconf->namestr_idx), (int)(cstore->exp_level + 1));
+        long tw = LbTextStringWidth(label);
+        long y = 4 + (drawn + 1) * (th + 4);
+        LbDrawBox(scale_value_landview(base_x - 4), scale_value_landview(y),
+            scale_value_landview(tw + 8), scale_value_landview(th), 0);
+        LbTextDrawResized(scale_value_landview(base_x), scale_value_landview(y),
+            units_per_pixel_landview, label);
+        drawn++;
+    }
+}
+
 void frontmap_draw(void)
 {
     SYNCDBG(8,"Starting");
@@ -1284,8 +1333,15 @@ void frontmap_draw(void)
     {
         draw_map_screen();
         draw_map_level_ensigns();
+        if (mouse_over_lvnum > 0)
+        {
+            net_level_hilighted = mouse_over_lvnum;
+            draw_map_level_descriptions();
+            net_level_hilighted = SINGLEPLAYER_NOTSTARTED;
+        }
         set_pointer_graphic_spland(0);
         compressed_window_draw();
+        draw_transferred_creature_display();
     }
 }
 
@@ -1636,6 +1692,7 @@ void frontmap_unload(void)
     set_pointer_graphic_none();
     unload_map_and_window();
     free_spritesheet(&map_flag);
+    free_font(&map_font);
     StopAllSamples();
     stop_description_speech();
     stop_music();
