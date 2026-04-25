@@ -431,6 +431,32 @@ static int compare_battlers(const void *a, const void *b) {
     return 0;
 }
 
+static long get_battle_min_health_permil(BattleIndex battle_idx)
+{
+    struct CreatureBattle* battle = creature_battle_get(battle_idx);
+    if (creature_battle_invalid(battle))
+        return 1001;
+    long min_permil = 1001;
+    long i = battle->first_creatr;
+    unsigned long k = 0;
+    while (i > 0)
+    {
+        struct Thing* thing = thing_get(i);
+        if (thing_is_invalid(thing) || !thing_is_creature(thing))
+            break;
+        struct CreatureControl* cctrl = creature_control_get_from_thing(thing);
+        i = cctrl->battle_prev_creatr;
+        long max_hp = cctrl->max_health > 0 ? cctrl->max_health : 1;
+        long hp_permil = ((long long)thing->health * 1000) / max_hp;
+        if (hp_permil < min_permil)
+            min_permil = hp_permil;
+        k++;
+        if (k > CREATURES_COUNT)
+            break;
+    }
+    return min_permil;
+}
+
 long setup_player_battlers(struct PlayerInfo *player, struct CreatureBattle *battle, unsigned short *friendly_battlers, unsigned short *enemy_battlers)
 {
     struct BattlerSortData temp_friendly[CREATURES_COUNT];
@@ -552,6 +578,21 @@ void maintain_my_battle_list(void)
               dungeon->visible_battles[i] = battle_id;
           }
       }
+    }
+    // Sort visible battles by lowest health creature (most critical first)
+    for (i = 0; i < 2; i++)
+    {
+        for (long j = i + 1; j < 3; j++)
+        {
+            if (dungeon->visible_battles[i] <= 0 || (dungeon->visible_battles[j] > 0
+                && get_battle_min_health_permil(dungeon->visible_battles[j])
+                 < get_battle_min_health_permil(dungeon->visible_battles[i])))
+            {
+                BattleIndex tmp = dungeon->visible_battles[i];
+                dungeon->visible_battles[i] = dungeon->visible_battles[j];
+                dungeon->visible_battles[j] = tmp;
+            }
+        }
     }
     for (i=0; i < 3; i++)
     {
