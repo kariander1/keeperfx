@@ -222,6 +222,9 @@ long check_out_unclaimed_dead_bodies(struct Thing *spdigtng, long range)
     if (!player_has_room_of_role(spdigtng->owner, RoRoF_DeadStorage)) {
         return 0;
     }
+    if (!player_creature_tends_to(spdigtng->owner, CrTend_Graveyard)) {
+        return 0;
+    }
     struct CreatureControl* cctrl = creature_control_get_from_thing(spdigtng);
     struct Room* room = find_nearest_room_of_role_for_thing_with_spare_capacity(spdigtng, spdigtng->owner, RoRoF_DeadStorage, NavRtF_Default, 1);
     // We either found a room or not - but we can't generate event based on it yet, because we don't even know if there's any thing to pick
@@ -1695,6 +1698,11 @@ short creature_picks_up_corpse(struct Thing *creatng)
 {
     struct Coord3d pos;
     TRACE_THING(creatng);
+    if (!player_has_room_of_role(creatng->owner, RoRoF_DeadStorage) || !player_creature_tends_to(creatng->owner, CrTend_Graveyard))
+    {
+        set_start_state(creatng);
+        return 0;
+    }
     struct CreatureControl* cctrl = creature_control_get_from_thing(creatng);
     struct Thing* picktng = thing_get(cctrl->pickup_object_id);
     TRACE_THING(picktng);
